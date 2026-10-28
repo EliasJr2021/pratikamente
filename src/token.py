@@ -1,24 +1,58 @@
 """Token do Instagram: armazenado cifrado (Fernet) em state/state.json e renovado antes dos 60 dias."""
+import base64
+import functools
+import hashlib
 import os
 from datetime import datetime, timedelta, timezone
 
 import requests
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 
 from . import state as st
 
 
+def normalize_key(raw: str) -> bytes | None:
+    """Aceita uma chave Fernet válida (44 caracteres). Qualquer outro valor não vazio é transformado
+    em uma chave por PBKDF2, para que um STATE_KEY colado com aspas, espaços ou outro formato não quebre o robô."""
+    raw = (raw or "").strip()
+    if raw.startswith(("b'", 'b"')):
+        raw = raw[2:]
+    raw = raw.strip("'\" \t\r\n")
+    if not raw:
+        return None
+    try:
+        if len(base64.urlsafe_b64decode(raw.encode())) == 32:
+            return raw.encode()
+    except Exception:  # noqa: BLE001
+        pass
+    dk = hashlib.pbkdf2_hmac("sha256", raw.encode(), b"carrossel-ig-state", 200_000, dklen=32)
+    return base64.urlsafe_b64encode(dk)
+
+
+@functools.lru_cache(maxsize=4)
+def _fernet_for(raw: str):
+    key = normalize_key(raw)
+    if key is None:
+        return None
+    if key != (raw or "").strip().encode():
+        print("[token] STATE_KEY não está no formato de chave Fernet; usando uma chave derivada do valor "
+              "informado. Para gerar uma válida: python scripts/gerar_chave.py")
+    return Fernet(key)
+
+
 def _fernet():
-    key = os.getenv("STATE_KEY", "")
-    return Fernet(key.encode()) if key else None
+    return _fernet_for(os.getenv("STATE_KEY", ""))
 
 
 def get_token(state: dict) -> str:
     f = _fernet()
     enc = state["ig"].get("token_enc")
-    if enc and f:
-        return f.decrypt(enc.encode()).decode()
     boot = os.getenv("IG_TOKEN_INICIAL", "")
+    if enc and f:
+        try:
+            return f.decrypt(enc.encode()).decode()
+        except InvalidToken:
+            print("[token] Não foi possível decifrar o token salvo (STATE_KEY mudou?); usando IG_TOKEN_INICIAL.")
     if not boot:
         raise RuntimeError("Sem token do Instagram: defina o segredo IG_TOKEN_INICIAL (e STATE_KEY).")
     return boot

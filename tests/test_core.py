@@ -1,3 +1,4 @@
+import base64
 import io
 import json
 from pathlib import Path
@@ -115,3 +116,27 @@ def test_media_base_url_validation():
     assert resolve_media_base("raw.githubusercontent.com/…/media", d) == d     # sem https e com reticências
     assert resolve_media_base("raw.githubusercontent.com/o/r/media", d) == d   # sem esquema
     assert resolve_media_base("https://exemplo.com/x/", d) == "https://exemplo.com/x"
+
+
+def test_state_key_formats(monkeypatch):
+    from cryptography.fernet import Fernet
+    from src import token as tk
+    good = Fernet.generate_key().decode()
+    assert tk.normalize_key(good) == good.encode()                      # válida: inalterada
+    assert tk.normalize_key(f"b'{good}'") == good.encode()               # colada com b'...'
+    assert tk.normalize_key(f'"{good}"\n') == good.encode()              # com aspas e quebra de linha
+    weird = "uma-chave-qualquer-com-49-caracteres-1234567890abcdef!"
+    k = tk.normalize_key(weird)
+    assert k and len(base64.urlsafe_b64decode(k)) == 32 and tk.normalize_key(weird) == k
+    assert tk.normalize_key("") is None
+    # chave inválida não derruba get_token e permite cifrar/decifrar
+    monkeypatch.setenv("STATE_KEY", weird)
+    monkeypatch.setenv("IG_TOKEN_INICIAL", "boot")
+    state = {"ig": {"token_enc": None}}
+    assert tk.get_token(state) == "boot"
+    f = tk._fernet()
+    state["ig"]["token_enc"] = f.encrypt(b"novo").decode()
+    assert tk.get_token(state) == "novo"
+    # chave trocada: volta ao token inicial em vez de falhar
+    monkeypatch.setenv("STATE_KEY", Fernet.generate_key().decode())
+    assert tk.get_token(state) == "boot"
