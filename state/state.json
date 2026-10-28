@@ -1,11 +1,11 @@
 {
-    "version": 1,
-    "posted": [],
-    "skipped": [],
-    "pending": null,
-    "ig": {
-        "token_enc": null,
-        "refreshed_at": null,
-        "expires_at": null
-    }
+  "version": 1,
+  "posted": [],
+  "skipped": [],
+  "pending": null,
+  "ig": {
+    "token_enc": "gAAAAABq4oq0fy2zWBLgx0cC7QzcU5nFTpaRsbMmdXWzp4XCaAool5llpHYgtEn1AQKwNSIMRWml4iSqi7NQmM5xciHe9KnG3cAyA28s2nhOHGU8IhwQAc5PwTfaDNcWYm18OQ306DdjTItDgLlucUfCn9eEQIzau03R-W7uU7BodiDqN-rZo45Zc2r3sdCNSsAj30Xj7OTxnoSvqDoWJFmlOMTUWFhRwvp7lBbqEv9V5Ykq6H7LdVWaejK0zKDX2sUCqcX5LOKIIukjTIKPChZBK_QubnCm8A==",
+    "refreshed_at": "2026-10-28T23:52:20+00:00",
+    "expires_at": "2026-12-27T01:18:12+00:00"
+  }
 }
