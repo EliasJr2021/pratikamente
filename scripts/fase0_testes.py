@@ -17,7 +17,7 @@ from src import config, discover
 from src import state as st
 from src.instagram import Instagram
 from src.media import push_media, wait_for_urls
-from src.token import get_token
+from src.token import get_token, is_fernet_key
 
 OK, FAIL = "✅", "❌"
 
@@ -88,7 +88,17 @@ def check_media():
         print(f"{FAIL} {e}")
 
 
+def check_state_key():
+    import os
+    if is_fernet_key(os.getenv("STATE_KEY", "")):
+        print(f"{OK} STATE_KEY válida (chave Fernet de 44 caracteres)")
+    else:
+        print(f"{FAIL} STATE_KEY INVÁLIDA: gere uma com `python scripts/gerar_chave.py` e salve SOMENTE a linha "
+              "impressa no segredo STATE_KEY. Sem isso a renovação do token do Instagram é recusada.")
+
+
 def check_instagram():
+    check_state_key()
     ig = Instagram(get_token(st.load()))
     print(f"{OK} conta:", ig.whoami())
     print(f"{OK} cota de publicação:", ig.quota())
