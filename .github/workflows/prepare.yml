@@ -1,0 +1,43 @@
+name: Preparar carrossel
+
+on:
+  schedule:
+    - cron: "0 15 * * *"   # 15:00 UTC = 12:00 em Recife (ajuste se quiser)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: pratikamente-state
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Preparar carrossel
+        run: python -m src.prepare
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_TOKEN_INICIAL: ${{ secrets.IG_TOKEN_INICIAL }}
+          STATE_KEY: ${{ secrets.STATE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPROVAL_MODE: ${{ vars.APPROVAL_MODE }}
+          CLAUDE_MODEL: ${{ vars.CLAUDE_MODEL }}
+          SITE_BASE: ${{ vars.SITE_BASE }}
+          MAX_SLIDES: ${{ vars.MAX_SLIDES }}
+          MIN_TEXT_CHARS: ${{ vars.MIN_TEXT_CHARS }}
+          MEDIA_BASE_URL: ${{ vars.MEDIA_BASE_URL }}
+          AI_IMAGE_NOTICE: ${{ vars.AI_IMAGE_NOTICE }}
+          IG_API_VERSION: ${{ vars.IG_API_VERSION }}
+          IG_HANDLE: ${{ vars.IG_HANDLE }}

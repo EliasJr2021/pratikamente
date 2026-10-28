@@ -1,0 +1,32 @@
+name: Renovar token do Instagram
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # toda segunda-feira
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pratikamente-state
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m src.refresh_token
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_TOKEN_INICIAL: ${{ secrets.IG_TOKEN_INICIAL }}
+          STATE_KEY: ${{ secrets.STATE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IG_API_VERSION: ${{ vars.IG_API_VERSION }}
+          IG_HANDLE: ${{ vars.IG_HANDLE }}

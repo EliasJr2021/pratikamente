@@ -1,0 +1,47 @@
+name: Publicar após aprovação
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:   # publica o carrossel pendente manualmente
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: pratikamente-state
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # Só o dono do repositório pode aprovar/rejeitar. Em repositório público qualquer pessoa pode comentar.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.comment.author_association == 'OWNER' &&
+       (startsWith(github.event.comment.body, '/aprovar') || startsWith(github.event.comment.body, '/rejeitar')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Publicar
+        run: python -m src.publish
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_TOKEN_INICIAL: ${{ secrets.IG_TOKEN_INICIAL }}
+          STATE_KEY: ${{ secrets.STATE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MEDIA_BASE_URL: ${{ vars.MEDIA_BASE_URL }}
+          IG_API_VERSION: ${{ vars.IG_API_VERSION }}
+          IG_HANDLE: ${{ vars.IG_HANDLE }}
+          AI_IMAGE_NOTICE: ${{ vars.AI_IMAGE_NOTICE }}
+          EVENT_NAME: ${{ github.event_name }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_AUTHOR_ASSOCIATION: ${{ github.event.comment.author_association }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
