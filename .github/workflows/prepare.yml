@@ -16,6 +16,8 @@ concurrency:
 jobs:
   prepare:
     runs-on: ubuntu-latest
+    env:
+      PYTHONUNBUFFERED: "1"
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4

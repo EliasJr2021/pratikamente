@@ -39,23 +39,30 @@ def push_media(slug: str, files: list[Path]) -> list[str]:
 
 
 def wait_for_urls(urls: list[str], timeout: int = 480, interval: int = 15) -> None:
-    """Espera cada URL responder 200 com image/jpeg (o Pages leva de segundos a alguns minutos)."""
+    """Espera cada URL responder 200 com image/jpeg e mostra o status a cada tentativa."""
     deadline = time.time() + timeout
     pending = list(urls)
+    last: dict[str, str] = {}
+    attempt = 0
     while pending and time.time() < deadline:
+        attempt += 1
         still = []
         for u in pending:
             try:
                 r = requests.get(u, timeout=20, headers={"User-Agent": config.USER_AGENT})
                 ok = r.status_code == 200 and r.headers.get("Content-Type", "").startswith("image/jpeg")
-            except requests.RequestException:
+                last[u] = f"HTTP {r.status_code} ({r.headers.get('Content-Type', '?')})"
+            except requests.RequestException as e:
                 ok = False
+                last[u] = f"erro de rede: {type(e).__name__}"
             if not ok:
                 still.append(u)
         pending = still
         if pending:
+            print(f"[media] tentativa {attempt}: {len(pending)} URL(s) indisponível(is) — {last[pending[0]]}", flush=True)
             time.sleep(interval)
     if pending:
         raise RuntimeError(
-            "As imagens não ficaram públicas a tempo. Verifique: Settings > Pages > Source = branch `media` "
-            f"(pasta /root), ou defina MEDIA_BASE_URL para raw.githubusercontent.com. Exemplo: {pending[0]}")
+            f"As imagens não ficaram públicas a tempo (último status: {last.get(pending[0])}; URL: {pending[0]}). "
+            "Se for 404: confirme que o repositório é PÚBLICO (o raw.githubusercontent.com não serve repositórios "
+            "privados) e que a branch `media` existe. Alternativa: GitHub Pages via MEDIA_BASE_URL.")

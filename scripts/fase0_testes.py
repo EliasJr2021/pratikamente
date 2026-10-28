@@ -82,7 +82,7 @@ def check_media():
     urls = push_media("_teste", [f])
     print("   enviado para a branch media:", urls[0])
     try:
-        wait_for_urls(urls, timeout=420)
+        wait_for_urls(urls, timeout=120, interval=10)
         print(f"{OK} URL pública acessível como image/jpeg")
     except Exception as e:  # noqa: BLE001
         print(f"{FAIL} {e}")
