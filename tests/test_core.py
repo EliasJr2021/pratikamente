@@ -106,3 +106,12 @@ def test_validation_rejects_long_heading():
     data["points"][0]["heading"] = "x" * 90
     with pytest.raises(Exception):
         Carousel.model_validate(data)
+
+
+def test_media_base_url_validation():
+    from src.config import resolve_media_base
+    d = "https://raw.githubusercontent.com/o/r/media"
+    assert resolve_media_base("", d) == d
+    assert resolve_media_base("raw.githubusercontent.com/…/media", d) == d     # sem https e com reticências
+    assert resolve_media_base("raw.githubusercontent.com/o/r/media", d) == d   # sem esquema
+    assert resolve_media_base("https://exemplo.com/x/", d) == "https://exemplo.com/x"

@@ -7,6 +7,15 @@ def _get(name: str, default: str = "") -> str:
     return v if v not in (None, "") else default
 
 
+def resolve_media_base(raw: str, default: str) -> str:
+    """Usa MEDIA_BASE_URL só se for uma URL completa; valores como 'raw.githubusercontent.com/…/media' são ignorados."""
+    raw = (raw or "").strip()
+    if raw and (not raw.startswith(("http://", "https://")) or "…" in raw or "..." in raw):
+        print(f"[config] MEDIA_BASE_URL inválida ({raw!r}); usando o padrão {default}.")
+        raw = ""
+    return (raw or default).rstrip("/")
+
+
 REPO = _get("GITHUB_REPOSITORY", "EliasJr2021/pratikamente")
 OWNER, REPO_NAME = REPO.split("/", 1)
 
@@ -26,7 +35,7 @@ IG_USER_ID = _get("IG_USER_ID", "me")
 
 # JPEGs públicos para a Meta baixar: branch `media` servida pelo raw.githubusercontent.com (validado no projeto
 # História em Dia). Alternativa: GitHub Pages, definindo MEDIA_BASE_URL.
-MEDIA_BASE_URL = _get("MEDIA_BASE_URL", f"https://raw.githubusercontent.com/{REPO}/media").rstrip("/")
+MEDIA_BASE_URL = resolve_media_base(_get("MEDIA_BASE_URL"), f"https://raw.githubusercontent.com/{REPO}/media")
 
 GITHUB_TOKEN = _get("GITHUB_TOKEN")
 USER_AGENT = "PratikamenteBot/1.0 (+https://pratikamente.com.br)"

@@ -73,7 +73,7 @@ O token de cada conta é diferente. **Não** reutilize o token do História em D
 | `MAX_SLIDES` | `10` | de 5 a 10 |
 | `MIN_TEXT_CHARS` | `1500` | texto mínimo do artigo para gerar o carrossel |
 | `SITE_BASE` | `https://pratikamente.com.br` | |
-| `MEDIA_BASE_URL` | `raw.githubusercontent.com/…/media` | não precisa de GitHub Pages |
+| `MEDIA_BASE_URL` | já vem pronta (`https://raw.githubusercontent.com/EliasJr2021/pratikamente/media`) | **não crie esta variável**; se criar, use a URL completa com `https://` |
 
 ### 5. Fase 0 — testes de viabilidade
 *Actions › Fase 0 - testes de viabilidade › Run workflow*, marcando **media** e **instagram**. Confira no log da etapa **Testes**:
