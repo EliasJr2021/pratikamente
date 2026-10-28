@@ -29,6 +29,18 @@ def normalize_key(raw: str) -> bytes | None:
     return base64.urlsafe_b64encode(dk)
 
 
+def is_fernet_key(raw: str) -> bool:
+    """True se o valor (após limpar aspas/espaços) é uma chave Fernet real: 32 bytes em base64 url-safe."""
+    raw = (raw or "").strip()
+    if raw.startswith(("b'", 'b"')):
+        raw = raw[2:]
+    raw = raw.strip("'\" \t\r\n")
+    try:
+        return len(base64.urlsafe_b64decode(raw.encode())) == 32 and len(raw) == 44
+    except Exception:  # noqa: BLE001
+        return False
+
+
 @functools.lru_cache(maxsize=4)
 def _fernet_for(raw: str):
     key = normalize_key(raw)
@@ -63,6 +75,11 @@ def refresh(state: dict) -> dict:
     f = _fernet()
     if not f:
         raise RuntimeError("Defina o segredo STATE_KEY (gere com scripts/gerar_chave.py).")
+    if not is_fernet_key(os.getenv("STATE_KEY", "")):
+        # O token renovado é commitado (cifrado) em um repositório público: exige chave aleatória de verdade.
+        raise RuntimeError(
+            "STATE_KEY inválida para proteger o token no repositório. Gere uma chave aleatória com "
+            "`python scripts/gerar_chave.py` e salve SOMENTE a linha impressa no segredo STATE_KEY.")
     token = get_token(state)
     r = requests.get("https://graph.instagram.com/refresh_access_token",
                      params={"grant_type": "ig_refresh_token", "access_token": token}, timeout=30)

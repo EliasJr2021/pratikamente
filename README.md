@@ -60,7 +60,7 @@ O token de cada conta é diferente. **Não** reutilize o token do História em D
 |---|---|
 | `ANTHROPIC_API_KEY` | Pode ser a mesma do outro projeto ou uma chave nova (mais fácil separar custos) |
 | `IG_TOKEN_INICIAL` | Token do passo 2 (conta do Pratikamente) |
-| `STATE_KEY` | **Nova** chave: `pip install cryptography && python scripts/gerar_chave.py` |
+| `STATE_KEY` | **Nova** chave: `python scripts/gerar_chave.py` |
 | `IG_USER_ID` | Opcional; deixe em branco (o robô usa `me`) |
 
 ### 4. Variáveis (*Variables*)

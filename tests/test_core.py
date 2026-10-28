@@ -140,3 +140,22 @@ def test_state_key_formats(monkeypatch):
     # chave trocada: volta ao token inicial em vez de falhar
     monkeypatch.setenv("STATE_KEY", Fernet.generate_key().decode())
     assert tk.get_token(state) == "boot"
+
+
+def test_refresh_requires_real_fernet_key(monkeypatch):
+    import pytest
+    from src import token as tk
+    assert tk.is_fernet_key(base64.urlsafe_b64encode(b"x" * 32).decode())
+    assert not tk.is_fernet_key("python scripts/gerar_chave.py")
+    assert not tk.is_fernet_key("")
+    monkeypatch.setenv("IG_TOKEN_INICIAL", "boot")
+    monkeypatch.setenv("STATE_KEY", "python scripts/gerar_chave.py")   # chave fraca: não pode proteger o token
+    with pytest.raises(RuntimeError, match="STATE_KEY inválida"):
+        tk.refresh({"ig": {"token_enc": None}})
+
+
+def test_gerar_chave_script_outputs_valid_key():
+    import subprocess, sys
+    from src import token as tk
+    out = subprocess.run([sys.executable, str(ROOT / "scripts" / "gerar_chave.py")], capture_output=True, text=True)
+    assert out.returncode == 0 and tk.is_fernet_key(out.stdout.strip())
